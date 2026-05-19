@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 const employees = [
   {
     name: "Anna Hansen",
@@ -60,11 +62,84 @@ const users = [
   },
   {
     title: "Kunde",
-    description: "Kan lese om selskapet og se hvilke løsninger som tilbys.",
+    description: "Kan lese om selskapet, se tjenester og sende forespørsel.",
   },
 ]
 
 function App() {
+  const [cookiesAccepted, setCookiesAccepted] = useState(false)
+
+  const [orderForm, setOrderForm] = useState({
+    product: "",
+    quantity: "1",
+    name: "",
+    email: "",
+    message: "",
+  })
+
+  const [formErrors, setFormErrors] = useState({})
+  const [orderSubmitted, setOrderSubmitted] = useState(false)
+
+  useEffect(() => {
+    const savedConsent = localStorage.getItem("nordicCookiesAccepted")
+
+    if (savedConsent === "true") {
+      setCookiesAccepted(true)
+    }
+  }, [])
+
+  const handleCookieAccept = () => {
+    localStorage.setItem("nordicCookiesAccepted", "true")
+    setCookiesAccepted(true)
+  }
+
+  const handleOrderChange = (event) => {
+    const { name, value } = event.target
+
+    setOrderForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }))
+
+    setOrderSubmitted(false)
+  }
+
+  const validateOrderForm = () => {
+    const errors = {}
+
+    if (!orderForm.product) {
+      errors.product = "Velg et produkt eller en tjeneste."
+    }
+
+    if (!orderForm.quantity || Number(orderForm.quantity) < 1) {
+      errors.quantity = "Antall må være minst 1."
+    }
+
+    if (!orderForm.name.trim()) {
+      errors.name = "Skriv inn navn."
+    }
+
+    if (!orderForm.email.trim()) {
+      errors.email = "Skriv inn e-postadresse."
+    } else if (!orderForm.email.includes("@")) {
+      errors.email = "E-postadressen må inneholde @."
+    }
+
+    setFormErrors(errors)
+
+    return Object.keys(errors).length === 0
+  }
+
+  const handleOrderSubmit = (event) => {
+    event.preventDefault()
+
+    if (!validateOrderForm()) {
+      return
+    }
+
+    setOrderSubmitted(true)
+  }
+
   return (
     <main className="page">
       <header className="hero">
@@ -79,7 +154,7 @@ function App() {
             <a href="#ansatte">Ansatte</a>
             <a href="#tjenester">Tjenester</a>
             <a href="#teknologi">Teknologi</a>
-            <a href="#kontakt">Kontakt</a>
+            <a href="#kontakt">Bestilling</a>
           </div>
         </nav>
 
@@ -95,8 +170,8 @@ function App() {
             <a className="primaryButton" href="#tjenester">
               Se tjenester
             </a>
-            <a className="secondaryButton" href="#teknologi">
-              Teknisk løsning
+            <a className="secondaryButton" href="#kontakt">
+              Send forespørsel
             </a>
           </div>
 
@@ -122,6 +197,7 @@ function App() {
           <p className="eyebrow">Om oss</p>
           <h2>En fleksibel IT-partner</h2>
         </div>
+
         <div className="textBlock">
           <p>
             Nordic Devices AS er et nystartet selskap som hjelper kunder med å
@@ -129,9 +205,9 @@ function App() {
             teknologien enkel å drifte, sikker i bruk og lett å videreutvikle.
           </p>
           <p>
-            Denne webapplikasjonen er laget som en enkel firmaside og et
-            utgangspunkt for videre utvikling. Den kan kjøres lokalt under
-            utvikling eller pakkes inn i et Docker image.
+            Denne webapplikasjonen er laget som en firmaside og en prototype
+            for videre utvikling. Den kan kjøres lokalt under utvikling eller
+            pakkes inn i et Docker image.
           </p>
         </div>
       </section>
@@ -139,6 +215,7 @@ function App() {
       <section id="ansatte" className="section">
         <p className="eyebrow">Team</p>
         <h2>Ansatte</h2>
+
         <div className="cardGrid">
           {employees.map((employee) => (
             <article className="card" key={employee.name}>
@@ -212,8 +289,8 @@ function App() {
             <h3>Sikkerhetsvurdering</h3>
             <p>
               I et lokalt testmiljø kan siden kjøres via HTTP. Ved produksjon
-              bør trafikken sikres med HTTPS/TLS, og tilgang til server bør
-              begrenses med sterke passord eller SSH-nøkler.
+              bør trafikken sikres med HTTPS/TLS. Tilgang til server bør også
+              sikres med SSH-nøkler i stedet for bare passord.
             </p>
           </article>
         </div>
@@ -222,6 +299,7 @@ function App() {
       <section className="section">
         <p className="eyebrow">Brukere av systemet</p>
         <h2>Hvem kan bruke løsningen?</h2>
+
         <div className="userGrid">
           {users.map((user) => (
             <article className="userCard" key={user.title}>
@@ -234,28 +312,151 @@ function App() {
 
       <section id="kontakt" className="section contactSection">
         <div>
-          <p className="eyebrow">Kontakt</p>
-          <h2>Klar for et mer strukturert IT-miljø?</h2>
+          <p className="eyebrow">Prototype for bestilling</p>
+          <h2>Send en forespørsel om produkt eller tjeneste</h2>
           <p>
-            Ta kontakt for en uforpliktende samtale om utstyr, nettverk,
-            webutvikling eller drift.
+            Dette er en enkel prototype som viser hvordan Nordic Devices senere
+            kan bygge videre mot bestilling og betaling på nettsiden.
           </p>
+
+          <div className="prototypeSteps" aria-label="Foreslått bestillingsflyt">
+            <span>1. Velg tjeneste</span>
+            <span>2. Send forespørsel</span>
+            <span>3. Bekreft avtale</span>
+            <span>4. Betaling i fremtidig løsning</span>
+          </div>
         </div>
 
-        <form className="contactForm">
-          <label>
+        <form className="contactForm" onSubmit={handleOrderSubmit} noValidate>
+          <label htmlFor="product">
+            Produkt eller tjeneste
+            <select
+              id="product"
+              name="product"
+              value={orderForm.product}
+              onChange={handleOrderChange}
+              aria-describedby={formErrors.product ? "product-error" : undefined}
+            >
+              <option value="">Velg produkt eller tjeneste</option>
+              <option value="Laptop-pakker">Laptop-pakker</option>
+              <option value="Nettverksutstyr">Nettverksutstyr</option>
+              <option value="Servermiljø">Servermiljø</option>
+              <option value="Supportavtale">Supportavtale</option>
+              <option value="Webutvikling">Webutvikling</option>
+            </select>
+
+            {formErrors.product && (
+              <span className="formError" id="product-error">
+                {formErrors.product}
+              </span>
+            )}
+          </label>
+
+          <label htmlFor="quantity">
+            Antall
+            <input
+              id="quantity"
+              name="quantity"
+              type="number"
+              min="1"
+              value={orderForm.quantity}
+              onChange={handleOrderChange}
+              aria-describedby={formErrors.quantity ? "quantity-error" : undefined}
+            />
+
+            {formErrors.quantity && (
+              <span className="formError" id="quantity-error">
+                {formErrors.quantity}
+              </span>
+            )}
+          </label>
+
+          <label htmlFor="name">
             Navn
-            <input type="text" placeholder="Ditt navn" />
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Ditt navn"
+              value={orderForm.name}
+              onChange={handleOrderChange}
+              aria-describedby={formErrors.name ? "name-error" : undefined}
+            />
+
+            {formErrors.name && (
+              <span className="formError" id="name-error">
+                {formErrors.name}
+              </span>
+            )}
           </label>
-          <label>
+
+          <label htmlFor="email">
             E-post
-            <input type="email" placeholder="navn@firma.no" />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="navn@firma.no"
+              value={orderForm.email}
+              onChange={handleOrderChange}
+              aria-describedby={formErrors.email ? "email-error" : undefined}
+            />
+
+            {formErrors.email && (
+              <span className="formError" id="email-error">
+                {formErrors.email}
+              </span>
+            )}
           </label>
-          <label>
-            Melding
-            <textarea placeholder="Hva trenger bedriften hjelp med?" />
+
+          <label htmlFor="message">
+            Kommentar
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Skriv kort hva bedriften trenger hjelp med."
+              value={orderForm.message}
+              onChange={handleOrderChange}
+            />
           </label>
-          <button type="button">Send forespørsel</button>
+
+          <button type="submit">Send forespørsel</button>
+
+          {orderSubmitted && (
+            <div className="orderSummary" role="status" aria-live="polite">
+              <h3>Forespørsel registrert</h3>
+              <p>
+                Dette er en prototype. I en ferdig løsning ville forespørselen
+                blitt sendt videre til et bestillingssystem og eventuelt en
+                sikker betalingsløsning.
+              </p>
+
+              <dl>
+                <div>
+                  <dt>Valgt tjeneste</dt>
+                  <dd>{orderForm.product}</dd>
+                </div>
+                <div>
+                  <dt>Antall</dt>
+                  <dd>{orderForm.quantity}</dd>
+                </div>
+                <div>
+                  <dt>Kunde</dt>
+                  <dd>{orderForm.name}</dd>
+                </div>
+                <div>
+                  <dt>E-post</dt>
+                  <dd>{orderForm.email}</dd>
+                </div>
+              </dl>
+
+              <p className="nextStep">
+                Neste steg i en ferdig løsning: kunden bekrefter bestillingen,
+                systemet oppretter ordre, og betaling kan gjennomføres via en
+                ekstern betalingsleverandør.
+              </p>
+            </div>
+          )}
         </form>
       </section>
 
@@ -263,6 +464,30 @@ function App() {
         <p>© 2026 Nordic Devices AS</p>
         <p>Utviklet som del av IT-utvikling case.</p>
       </footer>
+
+      {!cookiesAccepted && (
+        <section
+          className="cookie-banner"
+          aria-label="Informasjon om cookies og personvern"
+        >
+          <div>
+            <h2>Cookies og personvern</h2>
+            <p>
+              Denne nettsiden bruker nødvendige cookies for å forbedre
+              brukeropplevelsen og huske valgene dine. Du må aktivt godkjenne
+              bruken før samtykket lagres.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="cookie-button"
+            onClick={handleCookieAccept}
+          >
+            Godta cookies
+          </button>
+        </section>
+      )}
     </main>
   )
 }
