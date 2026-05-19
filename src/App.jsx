@@ -81,17 +81,18 @@ function App() {
   const [orderSubmitted, setOrderSubmitted] = useState(false)
 
   useEffect(() => {
-    const savedConsent = localStorage.getItem("nordicCookiesAccepted")
+  const cookies = document.cookie.split("; ")
 
-    if (savedConsent === "true") {
-      setCookiesAccepted(true)
-    }
-  }, [])
-
-  const handleCookieAccept = () => {
-    localStorage.setItem("nordicCookiesAccepted", "true")
+  if (cookies.includes("nordicCookiesAccepted=true")) {
     setCookiesAccepted(true)
   }
+}, [])
+
+const handleCookieAccept = () => {
+  document.cookie =
+    "nordicCookiesAccepted=true; max-age=31536000; path=/; SameSite=Lax"
+  setCookiesAccepted(true)
+}
 
   const handleOrderChange = (event) => {
     const { name, value } = event.target
