@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import "./App.css"
 
 const employees = [
   {
@@ -23,76 +24,135 @@ const employees = [
   },
 ]
 
-const services = [
-  "Leie og administrasjon av IT-utstyr",
-  "Oppsett av sikre nettverk",
-  "Webutvikling og digitale tjenester",
-  "Docker-basert testmiljø",
-  "Support og vedlikehold",
-  "Rådgivning innen IT-sikkerhet",
+const serviceOptions = [
+  {
+    id: "webutvikling-startpakke",
+    name: "Webutvikling startpakke",
+    price: 14900,
+    unit: "prosjekt",
+    description:
+      "En enkel og profesjonell nettside for små bedrifter, med responsivt design og grunnleggende SEO.",
+  },
+  {
+    id: "supportavtale",
+    name: "IT-supportavtale",
+    price: 1290,
+    unit: "måned",
+    description:
+      "Fast supportavtale for mindre bedrifter med hjelp til PC, brukere, nettverk og programvare.",
+  },
+  {
+    id: "nettverksoppsett",
+    name: "Nettverksoppsett for kontor",
+    price: 8900,
+    unit: "oppsett",
+    description:
+      "Planlegging og oppsett av router, switch, Wi-Fi og enkel sikkerhetsvurdering.",
+  },
+  {
+    id: "docker-miljo",
+    name: "Docker testmiljø",
+    price: 6900,
+    unit: "oppsett",
+    description:
+      "Oppsett av Docker-basert testmiljø slik at utviklere kan kjøre løsningen likt på flere maskiner.",
+  },
+  {
+    id: "sikkerhetssjekk",
+    name: "Sikkerhetssjekk av webtjeneste",
+    price: 4900,
+    unit: "gjennomgang",
+    description:
+      "Kontroll av HTTPS, servertilgang, brannmur, grunnleggende risiko og anbefalte tiltak.",
+  },
 ]
 
-const products = [
-  {
-    title: "Laptop-pakker",
-    description: "Ferdig klargjorte PC-er for små og mellomstore bedrifter.",
-  },
-  {
-    title: "Nettverksutstyr",
-    description: "Rutere, switcher og trådløse aksesspunkter til kontorbruk.",
-  },
-  {
-    title: "Servermiljø",
-    description: "Virtuelle servere for utvikling, testing og intern drift.",
-  },
+const services = [
+  "Webutvikling for små og mellomstore bedrifter",
+  "Docker-basert test- og utviklingsmiljø",
+  "Oppsett av sikre nettverk",
+  "IT-support og vedlikehold",
+  "Sikkerhetsvurdering av webtjenester",
+  "Rådgivning om videreutvikling av digitale løsninger",
 ]
 
 const users = [
   {
-    title: "Administrator",
-    description: "Kan administrere server, nettverk, sikkerhet og Docker-miljø.",
-  },
-  {
-    title: "Utvikler",
-    description: "Kan starte webapplikasjonen lokalt og teste endringer raskt.",
+    title: "Kunde",
+    description:
+      "Kan lese om tjenester, velge en løsning og sende en forespørsel.",
   },
   {
     title: "Ansatt",
-    description: "Kan finne informasjon om tjenester, produkter og kontaktpunkter.",
+    description:
+      "Kan bruke forespørsler fra kunder som grunnlag for videre oppfølging.",
   },
   {
-    title: "Kunde",
-    description: "Kan lese om selskapet, se tjenester og sende forespørsel.",
+    title: "Utvikler",
+    description:
+      "Kan starte prosjektet lokalt, teste endringer og bygge Docker image.",
+  },
+  {
+    title: "Administrator",
+    description:
+      "Kan administrere server, Docker-container, HTTPS og sikker tilgang.",
   },
 ]
+
+const paymentMethods = [
+  {
+    id: "kort-prototype",
+    label: "Kortbetaling",
+    description: "Simulert kortbetaling. Ingen ekte betaling gjennomføres.",
+  },
+  {
+    id: "faktura",
+    label: "Faktura",
+    description: "Kunden får tilbud og faktura etter manuell bekreftelse.",
+  },
+]
+
+function formatPrice(value) {
+  return new Intl.NumberFormat("nb-NO", {
+    style: "currency",
+    currency: "NOK",
+    maximumFractionDigits: 0,
+  }).format(value)
+}
 
 function App() {
   const [cookiesAccepted, setCookiesAccepted] = useState(false)
 
   const [orderForm, setOrderForm] = useState({
     product: "",
-    quantity: "1",
     name: "",
     email: "",
     message: "",
+    paymentMethod: "faktura",
   })
 
   const [formErrors, setFormErrors] = useState({})
   const [orderSubmitted, setOrderSubmitted] = useState(false)
 
-  useEffect(() => {
-  const cookies = document.cookie.split("; ")
+  const selectedService = serviceOptions.find(
+    (service) => service.id === orderForm.product
+  )
 
-  if (cookies.includes("nordicCookiesAccepted=true")) {
+  const estimatedTotal = selectedService ? selectedService.price : 0
+
+  useEffect(() => {
+    const cookies = document.cookie.split("; ")
+
+    if (cookies.includes("nordicCookiesAccepted=true")) {
+      setCookiesAccepted(true)
+    }
+  }, [])
+
+  const handleCookieAccept = () => {
+    document.cookie =
+      "nordicCookiesAccepted=true; max-age=31536000; path=/; SameSite=Lax"
     setCookiesAccepted(true)
   }
-}, [])
-
-const handleCookieAccept = () => {
-  document.cookie =
-    "nordicCookiesAccepted=true; max-age=31536000; path=/; SameSite=Lax"
-  setCookiesAccepted(true)
-}
 
   const handleOrderChange = (event) => {
     const { name, value } = event.target
@@ -109,12 +169,9 @@ const handleCookieAccept = () => {
     const errors = {}
 
     if (!orderForm.product) {
-      errors.product = "Velg et produkt eller en tjeneste."
+      errors.product = "Velg en tjeneste."
     }
 
-    if (!orderForm.quantity || Number(orderForm.quantity) < 1) {
-      errors.quantity = "Antall må være minst 1."
-    }
 
     if (!orderForm.name.trim()) {
       errors.name = "Skriv inn navn."
@@ -124,6 +181,10 @@ const handleCookieAccept = () => {
       errors.email = "Skriv inn e-postadresse."
     } else if (!orderForm.email.includes("@")) {
       errors.email = "E-postadressen må inneholde @."
+    }
+
+    if (!orderForm.paymentMethod) {
+      errors.paymentMethod = "Velg betalingsmåte."
     }
 
     setFormErrors(errors)
@@ -145,9 +206,8 @@ const handleCookieAccept = () => {
     <main className="page">
       <header className="hero">
         <nav className="navbar" aria-label="Hovedmeny">
-          <a className="logo" href="#top" aria-label="Nordic Devices AS">
-            <span className="logoMark">ND</span>
-            <span>Nordic Devices</span>
+          <a className="logo brandName" href="#top" aria-label="Nordic Devices AS">
+            Nordic Devices
           </a>
 
           <div className="navLinks">
@@ -160,11 +220,12 @@ const handleCookieAccept = () => {
         </nav>
 
         <section id="top" className="heroContent">
-          <p className="eyebrow">IT-utstyr og digitale tjenester</p>
-          <h1>Moderne IT-løsninger for små og mellomstore bedrifter</h1>
+          <p className="eyebrow">IT-utvikling og sikre webtjenester</p>
+          <h1>Digitale løsninger for små og mellomstore bedrifter</h1>
           <p className="lead">
-            Nordic Devices AS leverer utstyr, nettverk, webutvikling og sikre
-            testmiljøer basert på virtualisering og containerteknologi.
+            Nordic Devices AS leverer webutvikling, Docker-baserte testmiljøer,
+            nettverksoppsett og sikker drift for bedrifter som ønsker en
+            moderne og oversiktlig IT-løsning.
           </p>
 
           <div className="heroActions">
@@ -172,22 +233,22 @@ const handleCookieAccept = () => {
               Se tjenester
             </a>
             <a className="secondaryButton" href="#kontakt">
-              Send forespørsel
+              Start bestilling
             </a>
           </div>
 
           <div className="stats" aria-label="Nøkkelinformasjon">
             <article>
               <strong>Docker</strong>
-              <span>Klar for containerdrift</span>
+              <span>Containerbasert drift</span>
             </article>
             <article>
-              <strong>SSH</strong>
-              <span>Sikker servertilgang</span>
+              <strong>HTTPS</strong>
+              <span>Sikret med SSL/TLS</span>
             </article>
             <article>
-              <strong>Responsive</strong>
-              <span>Fungerer på mobil og PC</span>
+              <strong>WCAG</strong>
+              <span>Bedre tilgjengelighet</span>
             </article>
           </div>
         </section>
@@ -207,8 +268,8 @@ const handleCookieAccept = () => {
           </p>
           <p>
             Denne webapplikasjonen er laget som en firmaside og en prototype
-            for videre utvikling. Den kan kjøres lokalt under utvikling eller
-            pakkes inn i et Docker image.
+            for videre utvikling. Løsningen kan kjøres lokalt under utvikling,
+            pakkes i Docker og publiseres på en Ubuntu Server med HTTPS.
           </p>
         </div>
       </section>
@@ -237,20 +298,22 @@ const handleCookieAccept = () => {
       <section id="tjenester" className="section darkSection">
         <div className="sectionHeader">
           <div>
-            <p className="eyebrow">Produkter og tjenester</p>
-            <h2>Det Nordic Devices tilbyr</h2>
+            <p className="eyebrow">Tjenester og priser</p>
+            <h2>Hva Nordic Devices tilbyr</h2>
           </div>
           <p>
-            Løsningen er laget for å være tydelig, profesjonell og enkel å
-            bygge videre på.
+            Prisene er veiledende og brukes i denne prototypen for å vise hvordan
+            en fremtidig bestilling og betaling kan fungere.
           </p>
         </div>
 
         <div className="productGrid">
-          {products.map((product) => (
-            <article className="productCard" key={product.title}>
-              <h3>{product.title}</h3>
-              <p>{product.description}</p>
+          {serviceOptions.map((service) => (
+            <article className="productCard" key={service.id}>
+              <p className="priceTag">{formatPrice(service.price)}</p>
+              <h3>{service.name}</h3>
+              <p>{service.description}</p>
+              <span className="serviceUnit">Pris per {service.unit}</span>
             </article>
           ))}
         </div>
@@ -281,17 +344,18 @@ const handleCookieAccept = () => {
               <li>React + Vite som rammeverk for webapplikasjonen</li>
               <li>Dockerfile for bygging av Docker image</li>
               <li>Ubuntu Server som test- og driftsmiljø</li>
-              <li>SSH for sikker tilkobling til server</li>
-              <li>UFW firewall med kun nødvendige porter åpne</li>
+              <li>HTTPS med self-signed SSL/TLS-sertifikat</li>
+              <li>SSH som sikker tilkoblingsmetode til serveren</li>
             </ul>
           </article>
 
           <article className="infoPanel highlightPanel">
             <h3>Sikkerhetsvurdering</h3>
             <p>
-              I et lokalt testmiljø kan siden kjøres via HTTP. Ved produksjon
-              bør trafikken sikres med HTTPS/TLS. Tilgang til server bør også
-              sikres med SSH-nøkler i stedet for bare passord.
+              I testmiljøet brukes self-signed certificate. Nettleseren viser
+              derfor en advarsel, men trafikken går likevel over HTTPS. I et
+              produksjonsmiljø bør sertifikatet komme fra en offentlig
+              sertifikatutsteder.
             </p>
           </article>
         </div>
@@ -313,24 +377,24 @@ const handleCookieAccept = () => {
 
       <section id="kontakt" className="section contactSection">
         <div>
-          <p className="eyebrow">Prototype for bestilling</p>
-          <h2>Send en forespørsel om produkt eller tjeneste</h2>
+          <p className="eyebrow">Prototype for bestilling og betaling</p>
+          <h2>Bestill en IT-tjeneste</h2>
           <p>
-            Dette er en enkel prototype som viser hvordan Nordic Devices senere
-            kan bygge videre mot bestilling og betaling på nettsiden.
+            Dette er en prototype som viser sentrale deler av en fremtidig
+            bestillings- og betalingsløsning. Ingen ekte betaling gjennomføres.
           </p>
 
           <div className="prototypeSteps" aria-label="Foreslått bestillingsflyt">
             <span>1. Velg tjeneste</span>
-            <span>2. Send forespørsel</span>
-            <span>3. Bekreft avtale</span>
-            <span>4. Betaling i fremtidig løsning</span>
+            <span>2. Se estimert pris</span>
+            <span>3. Velg betalingsmåte</span>
+            <span>4. Send forespørsel</span>
           </div>
         </div>
 
         <form className="contactForm" onSubmit={handleOrderSubmit} noValidate>
           <label htmlFor="product">
-            Produkt eller tjeneste
+            Tjeneste
             <select
               id="product"
               name="product"
@@ -338,12 +402,12 @@ const handleCookieAccept = () => {
               onChange={handleOrderChange}
               aria-describedby={formErrors.product ? "product-error" : undefined}
             >
-              <option value="">Velg produkt eller tjeneste</option>
-              <option value="Laptop-pakker">Laptop-pakker</option>
-              <option value="Nettverksutstyr">Nettverksutstyr</option>
-              <option value="Servermiljø">Servermiljø</option>
-              <option value="Supportavtale">Supportavtale</option>
-              <option value="Webutvikling">Webutvikling</option>
+              <option value="">Velg tjeneste</option>
+              {serviceOptions.map((service) => (
+                <option value={service.id} key={service.id}>
+                  {service.name} – {formatPrice(service.price)}
+                </option>
+              ))}
             </select>
 
             {formErrors.product && (
@@ -353,24 +417,45 @@ const handleCookieAccept = () => {
             )}
           </label>
 
-          <label htmlFor="quantity">
-            Antall
-            <input
-              id="quantity"
-              name="quantity"
-              type="number"
-              min="1"
-              value={orderForm.quantity}
-              onChange={handleOrderChange}
-              aria-describedby={formErrors.quantity ? "quantity-error" : undefined}
-            />
+          {selectedService && (
+            <div className="selectedServiceBox">
+              <h3>{selectedService.name}</h3>
+              <p>{selectedService.description}</p>
+              <strong>
+                {formatPrice(selectedService.price)} per {selectedService.unit}
+              </strong>
+            </div>
+          )}
 
-            {formErrors.quantity && (
-              <span className="formError" id="quantity-error">
-                {formErrors.quantity}
-              </span>
+
+          <div className="pricePreview" aria-live="polite">
+            <span>Estimert totalpris</span>
+            <strong>{selectedService ? formatPrice(estimatedTotal) : "—"}</strong>
+          </div>
+
+          <fieldset className="paymentMethods">
+            <legend>Betalingsmåte</legend>
+
+            {paymentMethods.map((method) => (
+              <label className="paymentOption" key={method.id}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={method.id}
+                  checked={orderForm.paymentMethod === method.id}
+                  onChange={handleOrderChange}
+                />
+                <span>
+                  <strong>{method.label}</strong>
+                  <small>{method.description}</small>
+                </span>
+              </label>
+            ))}
+
+            {formErrors.paymentMethod && (
+              <span className="formError">{formErrors.paymentMethod}</span>
             )}
-          </label>
+          </fieldset>
 
           <label htmlFor="name">
             Navn
@@ -423,23 +508,37 @@ const handleCookieAccept = () => {
 
           <button type="submit">Send forespørsel</button>
 
-          {orderSubmitted && (
+          {orderSubmitted && selectedService && (
             <div className="orderSummary" role="status" aria-live="polite">
               <h3>Forespørsel registrert</h3>
               <p>
-                Dette er en prototype. I en ferdig løsning ville forespørselen
-                blitt sendt videre til et bestillingssystem og eventuelt en
-                sikker betalingsløsning.
+                Dette er en prototype. I en ferdig løsning ville ordren blitt
+                sendt til et bestillingssystem, og betaling kunne blitt
+                gjennomført via en sikker betalingsleverandør.
               </p>
 
               <dl>
                 <div>
                   <dt>Valgt tjeneste</dt>
-                  <dd>{orderForm.product}</dd>
+                  <dd>{selectedService.name}</dd>
                 </div>
                 <div>
                   <dt>Antall</dt>
                   <dd>{orderForm.quantity}</dd>
+                </div>
+                <div>
+                  <dt>Totalpris</dt>
+                  <dd>{formatPrice(estimatedTotal)}</dd>
+                </div>
+                <div>
+                  <dt>Betaling</dt>
+                  <dd>
+                    {
+                      paymentMethods.find(
+                        (method) => method.id === orderForm.paymentMethod
+                      )?.label
+                    }
+                  </dd>
                 </div>
                 <div>
                   <dt>Kunde</dt>
@@ -453,8 +552,9 @@ const handleCookieAccept = () => {
 
               <p className="nextStep">
                 Neste steg i en ferdig løsning: kunden bekrefter bestillingen,
-                systemet oppretter ordre, og betaling kan gjennomføres via en
-                ekstern betalingsleverandør.
+                systemet oppretter ordre, og betalingen håndteres av en ekstern
+                betalingsleverandør. Ingen betaling er gjennomført i denne
+                prototypen.
               </p>
             </div>
           )}
@@ -474,9 +574,8 @@ const handleCookieAccept = () => {
           <div>
             <h2>Cookies og personvern</h2>
             <p>
-              Denne nettsiden bruker nødvendige cookies for å forbedre
-              brukeropplevelsen og huske valgene dine. Du må aktivt godkjenne
-              bruken før samtykket lagres.
+              Denne nettsiden bruker nødvendige cookies for å huske valgene
+              dine. Du må aktivt godkjenne bruken før samtykket lagres.
             </p>
           </div>
 
